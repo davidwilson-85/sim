@@ -15,7 +15,7 @@
 # -outdir: Name of directory relative to current location where to place the recombinant chromosomes
 # 		created.
 # 
-# -achr (integer) [1, 2, 3, 4, 5]: Chromosome number from Arabidopsis thaliana. Used to apply the
+# -atc (integer) [1, 2, 3, 4, 5]: Chromosome number from Arabidopsis thaliana. Used to apply the
 # 		recombination frequency distribution corresponding to that particular chromosome. It must match
 # 		the chromosomes provided in 'parmut' and 'parpol'.
 # 
@@ -27,22 +27,19 @@
 # 		be the non-mutant parental. It must be a fasta-formatted file with a single contig. The length of
 # 		the contig must be equal to the length of -parmut.
 # 
-# -mutapos (integer): Position of the causal mutation in -parmut.
+# -pcm1 (integer): Position of the causal mutation in -parmut.
 # 
-# -mutbpos (integer): Position of the causal mutation in -parpol. Only required if mode is 'dr'.
+# -pcm2 (integer): Position of the causal mutation in -parpol. Only required if mode is 'dr'.
 # 
-# -smod [r, d, di, dr]: Selection mode. 'r': Recessive mutation and selection of the mutant phenotype
-# 		(recessive phenotypic class); 'd': Dominant mutation and selection of the mutant phenotype (dominant
-# 		phenotypic class); 'di': Dominant mutation and selection of the wild type phenotype (recessive
-# 		phenotypic class); 'dr': Two recessive mutations and selection of the double mutant phenotype.
+# -mod [re, dm, dw, tr]: Selection mode. 're': Recessive mutation and selection of the mutant phenotype
+# 		(recessive phenotypic class); 'dm': Dominant mutation and selection of the mutant phenotype (dominant
+# 		phenotypic class); 'dw': Dominant mutation and selection of the wild type phenotype (recessive
+# 		phenotypic class); 'tr': Two recessive mutations and selection of the double mutant phenotype.
 # 		In the first three modes, the causal mutation is provided in parental -parmut. In the last mode,
 # 		each causal mutation is provided in a different parental.
 # 
-# -nrec (integer): Number of recombinant chromosomes to create. This number corresponds to the number
-# 		of chromosomes after the selection has been performed. 
-#
-# 
-# 2016 - David Wilson - dws1985@hotmail.com
+# -nrc (integer): Number of recombinant chromosomes to create. This number corresponds to the number
+# 		of chromosomes after the selection has been performed.
 
 
 
@@ -53,15 +50,13 @@ from random import randint
 # Parse command arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('-outdir', action="store", dest='out_dir', required=True)
-parser.add_argument('-achr', action="store", dest='at_chr', 
-type=int, required=True, choices=set((1,2,3,4,5))) # Choose between 1, 2, 3, 4, 5
+parser.add_argument('-atc', action="store", dest='at_chr', type=int, required=True, choices=set((1,2,3,4,5))) # Choose between 1, 2, 3, 4, 5
 parser.add_argument('-parmut', action="store", dest='parental_a_mutant', required=True) #mutated genome
 parser.add_argument('-parpol', action="store", dest='parental_b_polymorphic', required=True) #polymorphic genome
-parser.add_argument('-mutapos', action="store", dest='mut_a_pos', type=int, required=True)
-parser.add_argument('-mutbpos', action="store", dest='mut_b_pos', type=int)
-parser.add_argument('-smod', action="store", dest='selection_mode',
-required=True, choices=set(('r','d','di','dr'))) #Choose between...
-parser.add_argument('-nrec', action="store", dest='nbr_rec_chrs', type=int, required=True)
+parser.add_argument('-pcm1', action="store", dest='mut_a_pos', type=int, required=True)
+parser.add_argument('-pcm2', action="store", dest='mut_b_pos', type=int)
+parser.add_argument('-mod', action="store", dest='selection_mode', required=True, choices=set(('re','dm','dw','tr'))) #Choose between...
+parser.add_argument('-nrc', action="store", dest='nbr_rec_chrs', type=int, required=True)
 args = parser.parse_args()
 
 out_dir = args.out_dir
@@ -70,10 +65,10 @@ parental_a_mutant = args.parental_a_mutant
 parental_b_polymorphic = args.parental_b_polymorphic
 mut_a_pos = args.mut_a_pos
 mut_b_pos = args.mut_b_pos
-selection_mode = args.selection_mode # "r" = recessive, "d" = dominant mt-phe, "di" = dominant wt-phe, "dr" = double recessive
+selection_mode = args.selection_mode # "re" = recessive, "dm" = dominant mt-phe, "dw" = dominant wt-phe, "tr" = double recessive
 nbr_rec_chrs = args.nbr_rec_chrs
 
-if selection_mode == 'dr' and mut_b_pos is None:
+if selection_mode == 'tr' and mut_b_pos is None:
 	quit('Quit. Selected mode is "double recessive" but no position for mutation b was provided. See program description.')		
 
 
@@ -236,7 +231,7 @@ while iter1 < nbr_rec_chrs:
 	# the second writes the output to a file.
 	
 	# Select all chromosomes that carry mutation A (all phenotypically mutant plants)
-	if selection_mode == 'r':
+	if selection_mode == 're':
 		if chr_carries_mutation_a == True:
 			rec_chr = create_rec_seq()
 			create_rec_chr_file()
@@ -245,7 +240,7 @@ while iter1 < nbr_rec_chrs:
 	# Select all chromosomes that carry mutation A and also some that do not, so the final
 	# proportion of chrs that carry the mutation is 0.67 (all phenotyoically mutant plants).
 	# This happens when selecting mutants with dominant mutation based on phenotype.
-	if selection_mode == 'd':
+	if selection_mode == 'dm':
 		if chr_carries_mutation_a == True:
 			rec_chr = create_rec_seq()
 			create_rec_chr_file()
@@ -258,14 +253,14 @@ while iter1 < nbr_rec_chrs:
 				iter1 +=1
 	
 	# Select all chromosomes that do not carry mutation A (all phenotypically wild type plants)
-	if selection_mode == 'di':
+	if selection_mode == 'dw':
 		if chr_carries_mutation_a == False:
 			rec_chr = create_rec_seq()
 			create_rec_chr_file()
 			iter1 +=1
 	
 	# Select all chromosomes that carry mutations A and B (all phenotipically double recessive mutants)
-	if selection_mode == 'dr':
+	if selection_mode == 'tr':
 		if chr_carries_mutation_a == True and chr_carries_mutation_b == True:
 			rec_chr = create_rec_seq()
 			create_rec_chr_file()

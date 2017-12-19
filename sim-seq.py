@@ -24,31 +24,28 @@
 # 
 # -out: Name of directory relative to current location where to place the reads created.
 # 
-# -mod [se, pe]: Mode [single-end or paired end]. If paired-end mode chosen, the user must provide
-# 		a value for '-flm' and '-fls' parameters.
+# -lib [se, pe]: Mode / type of sequencing library [single-end or paired end]. If paired-end mode chosen,
+#		the user must provide a value for '-flm' and '-fls' parameters.
 # 
 # -rd (integer): Read depth. The average number of reads by which a given locus in the genome is
 # 		represented.
 # 
-# -rlm (integer): Read length mean.
+# -rl (integer): Read length average.
 # 
-# -rls (integer): Read length standard deviation. To simulate reads with fixed length, set this
+# -rld (integer): Read length standard deviation. To simulate reads with fixed length, set this
 # 		parameter to 0; to simulate variable length reads with a normal distribution, set it to >0.
 # 
-# -flm (integer): Fragment length mean. flm >= 2*rlm. Required if -mod=pe.
+# -fs (integer): Fragment size average. flm >= 2*rlm. Required if -mod=pe.
 # 
-# -fls (integer): Fragment length standard deviation. Fragment length follows a normal distribution.
+# -fsd (integer): Fragment size standard deviation. Fragment length follows a normal distribution.
 # 		Required if -mod=pe.
 # 
 # -ber (integer) [0-10%]: Basecalling error rate. Percentage of bases incorrectly called. If base
 # 		calling occurs and template base is A, output can be C, G or T, each of them with 1/3 probability.
 # 		Basecalling errors consist only in base substitutions, not indels.
 # 
-# -gbs (integer) [0 - 100]: GC/AT bias strength. The amount of effect caused by non-neutral GC/AT
-# 		content during library amplification (see above). 
-#
-# 
-# 2016 - David Wilson - dws1985@hotmail.com
+# -gcs (integer) [0 - 100]: GC/AT bias strength. The amount of effect caused by non-neutral GC/AT
+# 		content during library amplification (see above).
 
 
 
@@ -56,18 +53,18 @@ import argparse, os, re, datetime
 from random import randint, gauss
 from string import maketrans
 
+
 # Parse command arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('-if', action="store", dest='input_folder', required=True)
-parser.add_argument('-mod', action="store", dest='mode',
-choices=set(('se','pe')), required=True) # Choose between se (= single end) and pe (= paired end)
+parser.add_argument('-lib', action="store", dest='mode', choices=set(('se','pe')), required=True) # Choose between se (= single end) and pe (= paired end)
 parser.add_argument('-rd', action="store", dest='read_depth', type=int, required=True)
-parser.add_argument('-rlm', action="store", dest='read_length_mean', type=int, required=True)
-parser.add_argument('-rls', action="store", dest='read_length_sd', type=int, required=True)
-parser.add_argument('-flm', action="store", dest='fragment_length_mean', type=int)
-parser.add_argument('-fls', action="store", dest='fragment_length_sd', type=int)
+parser.add_argument('-rl', action="store", dest='read_length_mean', type=int, required=True)
+parser.add_argument('-rld', action="store", dest='read_length_sd', type=int, required=True)
+parser.add_argument('-fs', action="store", dest='fragment_length_mean', type=int)
+parser.add_argument('-fsd', action="store", dest='fragment_length_sd', type=int)
 parser.add_argument('-ber', action="store", dest='basecalling_error_rate', type=int, required=True)
-parser.add_argument('-gbs', action="store", dest='gc_bias_strength', type=int, required=True)
+parser.add_argument('-gcs', action="store", dest='gc_bias_strength', type=int, required=True)
 parser.add_argument('-out', action="store", dest='out', required=True)
 
 args = parser.parse_args()

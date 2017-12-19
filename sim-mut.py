@@ -1,11 +1,11 @@
 #!/usr/bin/python
 #
 #
-# This program simulates a mutagenesis. It takes a DNA sequence and introduces mutations.
+# This program simulates natural or artificial mutagenesis. It takes a DNA sequence and introduces mutations.
 # 
 # PARAMETERS EXPLANATION:
 # 
-# -nbr (integer): Total number of mutations. It must be an integer. Absolute value. The ratio between
+# -nm (integer): Total number of mutations. It must be an integer. Absolute value. The ratio between
 #       the number of mutations asked to create and the length of the fasta sequence is limited to 0.02.
 # 
 # -mod [d, e, li]: Mutation mode. 'd': Any base can be mutated and any of the three alternative bases
@@ -21,9 +21,7 @@
 #       Only required in mode 'large insertions'. 
 # 
 # -out: Name of the file (or relative path) where mutated fasta data will be written
-# 
-# 
-# 2016 - David Wilson - dws1985@hotmail.com
+
 
 
 import argparse, os, shutil
@@ -32,9 +30,8 @@ from random import randint
 
 # Parse command arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('-nbr', action="store", dest='total_nbr_mutations', type=int, required=True)
-parser.add_argument('-mod', action="store", dest='mutator_mode',
-choices=set(('d','e','li')), required=True) #Choose between d, e, li (d = genetic drift SNP mutations, e = EMS SNP mutations GC>AT, li = long insertion (t-dna, transposon))
+parser.add_argument('-nm', action="store", dest='total_nbr_mutations', type=int, required=True)
+parser.add_argument('-mod', action="store", dest='mutator_mode', choices=set(('dri','ems','lin')), required=True) #Choose between d, e, li (d = genetic drift SNP mutations, e = EMS SNP mutations GC>AT, li = long insertion (t-dna, transposon))
 parser.add_argument('-con', action="store", dest='contig_source', required=True)
 parser.add_argument('-ins', action="store", dest='insertion_source')
 parser.add_argument('-out', action="store", dest='output')
@@ -47,7 +44,7 @@ contig_source = args.contig_source
 insertion_source = args.insertion_source
 output = args.output
 
-if mutator_mode == 'li' and insertion_source is None:
+if mutator_mode == 'lin' and insertion_source is None:
 	quit('Quit. Selected mode is "large insertions" but no insertion sequence source was provided. See program description.')		
 
 # Process 'args.output_file_1'
@@ -102,10 +99,10 @@ iter = 0
 while iter < total_nbr_mutations:
 	mut_pos = randint(1, contig_length - 2) # I deliberately exclude first and last nucleotides
 	if mut_pos not in all_mut_pos:
-		if mutator_mode == 'd' or mutator_mode == 'li': # If mode is drift, any base can be mutated
+		if mutator_mode == 'dri' or mutator_mode == 'lin': # If mode is drift, any base can be mutated
 			iter +=1
 			all_mut_pos.append(mut_pos)
-		if mutator_mode == 'e': # If mode is EMS, ony G and A can be mutated
+		if mutator_mode == 'ems': # If mode is EMS, ony G and A can be mutated
 			wt_base = seq_contig_uppercase[mut_pos:mut_pos+1]
 			if wt_base == 'G' or wt_base == 'C':
 				iter +=1
@@ -115,14 +112,14 @@ all_mut_pos.sort()
 
 
 # If mode is SNPs (drift or EMS), use list 'all_mut_pos' and determine the mutant allele at each position
-if mutator_mode == 'd' or mutator_mode == 'e':
+if mutator_mode == 'dri' or mutator_mode == 'ems':
 	all_mut_info = list() # Will store mutated positions, wt base, and mut base
 
 	# Iterate over list, determine the wt base for each position in list, and randomly choose a mt base
 	for i in all_mut_pos:
 		wt_base = seq_contig_uppercase[i:i+1]
 
-		if mutator_mode == 'd': # If mode is drift, the mutation can be any base
+		if mutator_mode == 'dri': # If mode is drift, the mutation can be any base
 			options_drift = {'A': ['T', 'C', 'G'], 'T': ['C', 'G', 'A'], 'C': ['G', 'A', 'T'], 'G': ['A', 'T', 'C']}
 			try:
 				possible_mt_bases = options_drift[wt_base] # Lookup the alterantive bases of "wt_base" in "options_drift"
@@ -130,7 +127,7 @@ if mutator_mode == 'd' or mutator_mode == 'e':
 			except KeyError:
 				mt_base = 'N'
 
-		if mutator_mode == 'e': # If mode is ems, only GC>AT possible
+		if mutator_mode == 'ems': # If mode is ems, only GC>AT possible
 			options_ems = {'G': 'A', 'C': 'T'}
 			try:
 				mt_base = options_ems[wt_base]
@@ -158,7 +155,7 @@ if mutator_mode == 'd' or mutator_mode == 'e':
 	output2.close()
 		
 		
-if mutator_mode == 'li':
+if mutator_mode == 'lin':
 	# How insertion positions are handled:
 	#  ATCG     .ATCG     A.TCG     AT.CG     ATC.G     ATCG.
 	#  01234    0          1          2          3          4
@@ -205,14 +202,14 @@ if mutator_mode == 'li':
 output1 = open(output_folder + '/info_all_mutations.txt', 'w')
 
 # If mode is SNPs, write header with 3 columns and use list "all_mut_info".
-if mutator_mode == 'd' or mutator_mode == 'e':
+if mutator_mode == 'dri' or mutator_mode == 'ems':
 	output1.write('position\twt_base\tmt_base\n')
 	for mut_info in all_mut_info:
 		pos = int(mut_info[0]) + 1
 		output1.write(str(pos) + '\t' + str(mut_info[1]) + '\t' + str(mut_info[2]) + '\n')
 
 # If mode is large insertions, write name of inserted sequence, single column header, and just use list "all_mut_pos".
-if mutator_mode == 'li':
+if mutator_mode == 'lin':
 	output1.write('name of inserted sequence: ' + name_ins[1:] + '\n\npositions of insertions\n')
 	for mut_pos in all_mut_pos:
 		output1.write(str(mut_pos) + '\n')
