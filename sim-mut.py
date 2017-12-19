@@ -8,9 +8,9 @@
 # -nm (integer): Total number of mutations. It must be an integer. Absolute value. The ratio between
 #       the number of mutations asked to create and the length of the fasta sequence is limited to 0.02.
 # 
-# -mod [d, e, li]: Mutation mode. 'd': Any base can be mutated and any of the three alternative bases
-#       can be the variant, like in genetic drift; 'e': Only CG > AT transitions are created, as caused by
-#       ethyl methanesulfonate (EMS); 'li': The sequence of a large insertion provided by the user is inserted
+# -mod [dri, ems, lin]: Mutation mode. 'dri': Any base can be mutated and any of the three alternative bases
+#       can be the variant, like in genetic drift; 'ems': Only CG > AT transitions are created, as caused by
+#       ethyl methanesulfonate (EMS); 'lin': The sequence of a large insertion provided by the user is inserted
 #       at random positions.
 # 
 # -con: Source of the contig sequence to mutate. It must be in fasta format. It only supports fasta files
